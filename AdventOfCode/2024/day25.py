@@ -1,10 +1,9 @@
 
 
 def readTheFile(filename):
-    """Liest die Datei und teilt sie in Blöcke auf."""
     with open(filename, 'r') as file:
         content = file.read()
-    blocks = content.split('\n\n')  # Teilt den Inhalt bei doppelten Zeilenumbrüchen
+    blocks = content.split('\n\n')
 
     splittedBlocks = [x.split() for x in blocks]
 
@@ -24,10 +23,6 @@ def transpose_list(liste):
             neue_liste[spalte_index] += zeichen
 
     return neue_liste
-
-
-def block_to_row(block):
-    return block.splitlines()
 
 
 def part1():
