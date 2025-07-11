@@ -70,7 +70,7 @@ def part2():
     while len(functions) > 0:
         currentFuntion = functions.pop(0)
         val1, op, val2, waste, result  = currentFuntion.split()
-        #print('aahaha')
+
         if val1 in theDict.keys() and val2 in theDict.keys():
             if op == 'AND':
                 theDict[result] = theDict[val1] and theDict[val2]
