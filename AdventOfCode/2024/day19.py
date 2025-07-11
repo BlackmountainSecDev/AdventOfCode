@@ -122,8 +122,8 @@ def count_total_arrangements(available_patterns, desired_designs):
 
 
 def part2():
-    #patterns, designs = readTheFile('Resources/day19ResourceTraining.txt')
-    patterns, designs = readTheFile('Resources/day19Resource.txt')
+    patterns, designs = readTheFile('Resources/day19ResourceTraining.txt')
+    #patterns, designs = readTheFile('Resources/day19Resource.txt')
 
     result = count_total_arrangements(set(patterns), designs)
     print(f"Anzahl der möglichen Designs: {result}")
@@ -131,5 +131,5 @@ def part2():
 
 
 if __name__ == '__main__':
-    part1()
+    #part1()
     part2()
