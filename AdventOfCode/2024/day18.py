@@ -14,7 +14,7 @@ def readTheFile(filename):
 # afterwards takes the node checks if it is the end or it has been already visited
 # if none of them check the nodes around
 '''
-def bfs_no_cheat(start, end, maze):
+def breadthFirstSearch(start, end, maze):
     from collections import deque
     rows, cols = len(maze), len(maze[0])
     visited = set()
@@ -41,9 +41,6 @@ def part1():
 
     print('Part 1')
 
-
-
-
     if isTraining:
         theBytes = readTheFile('Resources/day18ResourceTraining.txt')
         rows = 7  # Training
@@ -57,10 +54,8 @@ def part1():
 
     start = [0, 0]
     end = [rows-1, cols-1]
-    #directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
     map_1d = ['.'] * (rows * cols)
-    map_2d = []
 
     '''
     #as for loop
@@ -73,17 +68,15 @@ def part1():
     map_2d = [map_1d[i * cols: (i + 1) * cols] for i in range(rows)]
     #print(theBytes)
 
-
-
     for pos in range(0, amountOfBytes):
         x, y = theBytes[pos]
         map_2d[y][x] = '#'
 
 
-    for i in range (0, len(map_2d)):
-        print(map_2d[i])
+    #for i in range (0, len(map_2d)):
+    #    print(map_2d[i])
 
-    result = bfs_no_cheat(start, end, map_2d)
+    result = breadthFirstSearch(start, end, map_2d)
 
     print(result)
 
@@ -110,10 +103,8 @@ def part2():
 
     start = [0, 0]
     end = [rows-1, cols-1]
-    #directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
     map_1d = ['.'] * (rows * cols)
-    map_2d = []
 
     '''
     #as for loop
@@ -133,17 +124,11 @@ def part2():
             x, y = theBytes[pos]
             map_2d[y][x] = '#'
 
-
-        #for i in range (0, len(map_2d)):
-        #    print(map_2d[i])
-
-        result = bfs_no_cheat(start, end, map_2d)
+        result = breadthFirstSearch(start, end, map_2d)
 
         amountOfBytes += 1
         if amountOfBytes >= len(theBytes):
             result = float('inf')
-
-
 
     print(theBytes[amountOfBytes-2])
 
