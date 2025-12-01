@@ -1,4 +1,5 @@
 import heapq
+from collections import defaultdict
 from collections import deque
 
 
@@ -137,6 +138,118 @@ def dijkstraAllPossWays(start, end, maze, rows, cols, startDir):
     return finalHeaps
 #    print(finalHeaps)
 
+
+def dijkstraAllPossWays_efficient(start, end, maze, rows, cols, startDir):
+    # dist: speichert die minimale Distanz zum Erreichen eines Zustands (Position, Richtung)
+    dist = defaultdict(lambda: float('inf'))
+
+    # prev: speichert ALLE vorhergehenden Zustände, die den minimalen Abstand ergeben
+    # prev[(r, c, dr, dc)] = {((pr, pc), (pdr, pdc)), ...}
+    prev = defaultdict(set)
+
+    # Der Heap speichert: (distance, r, c, dr, dc)
+    # (dr, dc) ist die Richtung, aus der (r, c) erreicht wurde.
+    pq = []
+
+    # Initialisierung des Startzustands:
+    # Da der Start (S) von außen erreicht wird (oder der erste Schritt erfolgt),
+    # ist die Kosten 0. Der erste Schritt vom Start in startDir hat Kosten 1.
+    # Wir modellieren den Startzustand als den Zustand, in dem wir uns befinden,
+    # nachdem wir den Startknoten erreicht haben.
+
+    # Für den Startknoten setzen wir die "Letzte_Richtung" auf startDir, damit
+    # der erste Schritt die korrekten Kosten von 1 hat, wenn er in dieselbe
+    # Richtung geht, oder 1001, wenn er die Richtung ändert.
+    start_state = (start, startDir)
+    dist[start_state] = 0
+    heapq.heappush(pq, (0, *start, *startDir))  # (Distanz, r, c, dr, dc)
+
+    min_end_dist = float('inf')
+
+    while pq:
+        d, r, c, last_dr, last_dc = heapq.heappop(pq)
+        current_pos = (r, c)
+        current_dir = (last_dr, last_dc)
+        current_state = (current_pos, current_dir)
+
+        # Wenn wir bereits einen besseren (oder gleichwertigen) Pfad gefunden haben, ignorieren
+        if d > dist[current_state]:
+            continue
+
+        # Wenn der Endknoten erreicht wird
+        if current_pos == end:
+            if d < min_end_dist:
+                min_end_dist = d
+            # Wenn d > min_end_dist, ist dieser Pfad länger als der kürzeste bisher gefundene.
+            # Da Dijkstra die Knoten in aufsteigender Reihenfolge der Distanz besucht,
+            # können wir aufhören, sobald die aktuelle Distanz die minimale Distanz
+            # zum Ziel überschreitet.
+            if d > min_end_dist:
+                break
+
+        # Nur Nachbarn besuchen, wenn die aktuelle Distanz nicht bereits die minimale Enddistanz überschreitet
+        if d <= min_end_dist:
+            for neighbor_pos, neighbor_dir in neighbors(r, c, maze, rows, cols):
+                nr, nc = neighbor_pos
+                ndr, ndc = neighbor_dir
+                neighbor_state = (neighbor_pos, neighbor_dir)
+
+
+                # Kosten berechnen: 1 für gleiche Richtung, 1001 für Richtungswechsel
+                if neighbor_dir == current_dir:
+                    cost = 1  # Richtung beibehalten
+                else:
+                    cost = 1001  # Richtung gewechselt
+
+                tentative_dist = d + cost
+
+                if tentative_dist < dist[neighbor_state]:
+                    # Neuer bester Pfad gefunden
+                    dist[neighbor_state] = tentative_dist
+                    prev[neighbor_state] = {current_state}
+                    heapq.heappush(pq, (tentative_dist, nr, nc, ndr, ndc))
+                elif tentative_dist == dist[neighbor_state]:
+                    # Gleichwertiger Pfad gefunden, zum prev-Set hinzufügen
+                    prev[neighbor_state].add(current_state)
+
+    # --- Rekonstruktion aller kürzesten Wege (DFS/Rekursion) ---
+    shortest_paths = []
+
+    # Alle Endzustände mit minimaler Distanz sammeln
+    final_states = []
+    for (pos, direction), distance in dist.items():
+        if pos == end and distance == min_end_dist:
+            final_states.append((pos, direction))
+
+
+    # Rekursive Funktion zur Nachverfolgung der Pfade
+    def backtrack(current_state, path_positions):
+
+        # Füge die Position des aktuellen Zustands zum Pfad hinzu
+        path_positions = [current_state[0]] + path_positions
+
+        # Basisfall: Startzustand erreicht (Distanz 0)
+        if dist[current_state] == 0:
+            shortest_paths.append(path_positions)
+            return
+
+        # Rekursion: Gehe zu allen vorhergehenden Zuständen
+        for prev_state in prev[current_state]:
+            backtrack(prev_state, path_positions)
+
+    # Starte die Rekonstruktion von allen finalen Zuständen
+    for state in final_states:
+        backtrack(state, [])
+
+    # Sammeln aller eindeutigen besuchten Punkte (aus allen kürzesten Wegen)
+    all_points = set()
+    for path in shortest_paths:
+        for point in path:
+            all_points.add(point)
+
+    return all_points, min_end_dist
+
+
 # Finden von Start (S) und Ende (E)
 def find_pos(char, theMap):
     for r in range(len(theMap)):
@@ -189,10 +302,18 @@ def part2():
     MAXCOL = len(maze[0])
 
 
-
     start = find_pos('S', maze)
     end = find_pos('E', maze)
 
+    # Die Startrichtung (0, 1) wurde beibehalten
+    print(f'Starte Pfadsuche von S={start} nach E={end}...')
+    all_points, min_dist = dijkstraAllPossWays_efficient(start, end, maze, MAXROW, MAXCOL, (0, 1))
+
+    print(f'\n--- Ergebnis ---')
+    print(f'Minimale Kosten des kürzesten Weges: {min_dist}')
+    print(f'Anzahl der eindeutigen besuchten Punkte auf ALLEN kürzesten Wegen: {len(all_points)}')
+
+    '''
     all_paths = dijkstraAllPossWays(start, end, maze, MAXROW, MAXCOL, (0, 1))
 
     allPoints = set()
@@ -203,7 +324,7 @@ def part2():
             allPoints.add(point)
 
     print(len(allPoints))
-
+    '''
 
 
 if __name__ == '__main__':
