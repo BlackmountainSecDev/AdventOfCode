@@ -8,7 +8,6 @@ def readTheFile(filename):
         return aha
 
 LEFT = 'L'
-#RIGHT = 'R'
 
 def part1():
 
@@ -30,28 +29,14 @@ def part1():
         if direction == LEFT:
             currentValue -= value
 
-            '''
-            endValue = currentValue - value
-            print(f'{currentValue} - {value} = {endValue}')
-            currentValue = endValue
-            '''
-
             if currentValue < 0:
                 currentValue += 100
-                #print(f'corrected: {currentValue}')
 
         else:
             currentValue += value
-
-            '''
-            endValue = currentValue + value
-            print(f'{currentValue} + {value} = {endValue}')
-            currentValue = endValue
-            '''
             
             if currentValue > 99:
                  currentValue -= 100
-                 #print(f'corrected: {currentValue}')
 
         if currentValue == 0:
             zeroCounter += 1
