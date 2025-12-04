@@ -15,8 +15,6 @@ def readTheFile(filename):
 
 
 def findHighestPossibleValue(batteryRow, lenghtOfValue):
-
-
     wholeValue = 0
 
     while lenghtOfValue:
@@ -49,7 +47,6 @@ def part1And2():
 
     print(allValuesPar1)
     print(allValuesPar2)
-
 
 
 if __name__ == '__main__':
