@@ -20,7 +20,7 @@ def readTheFile(filename):
 def part1():
     print('Part 1')
 
-    test = False
+    test = True
 
     if test:
         ids, ranges = content = readTheFile('Resources/day5Training.txt')
