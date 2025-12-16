@@ -1,5 +1,7 @@
-import numpy as np
+from sympy import false
 import matplotlib.pyplot as plt
+from matplotlib.path import Path
+import os
 
 
 def readTheFile(fileName):
@@ -39,150 +41,114 @@ def part1():
     print(allDiffs[0])
 
 
-def findOppositeAndCountSizeOfArea(currentElem, lookupTableByX, lookupTableByY):
-    x, y = currentElem
-
-    neigbhourC = -1
-    #find neigbhour in same column
-    for val in lookupTableByX[x]:
-        if val != currentElem and val[1] > y:
-            neigbhourC = val
-
-    if neigbhourC != -1:
-        #find from the neighour, the neigbhour in same row
-        nx, ny = neigbhourC
-        neigbhourR = -1
-        for val in lookupTableByY[ny]:
-            if val != neigbhourC and val[0] > x:
-                neigbhourR = val
 
 
-        if neigbhourR != -1:
-            fx, fy = currentElem
-            sx, sy = neigbhourR
-            x = abs(fx - sx) + 1
-            y = abs(fy - sy) + 1
-            return [currentElem, neigbhourR, x*y]
+'''
+**********
+* Gemini *
+**********
+'''
+def is_rectangle_valid(p1, p2, poly_points):
+    """
+    Prüft, ob das aufgespannte Rechteck zwischen p1 und p2
+    vollständig innerhalb des Polygons liegt.
+    """
+    xmin, xmax = sorted([p1[0], p2[0]])
+    ymin, ymax = sorted([p1[1], p2[1]])
 
+    # 1. Schritt: Raycasting (Mittelpunkt-Check)
+    # Ist der geometrische Mittelpunkt des Rechtecks im Polygon?
+    test_x, test_y = (xmin + xmax) / 2.0, (ymin + ymax) / 2.0
+    inside = False
+    for i in range(len(poly_points)):
+        cp1 = poly_points[i]
+        cp2 = poly_points[(i + 1) % len(poly_points)]
+        if ((cp1[1] > test_y) != (cp2[1] > test_y)) and \
+                (test_x < (cp2[0] - cp1[0]) * (test_y - cp1[1]) / (cp2[1] - cp1[1]) + cp1[0]):
+            inside = not inside
 
+    if not inside:
+        return False
 
-    return -1
+    # 2. Schritt: Schnitt-Check
+    # Keine Linie des Polygons darf durch das Innere des Rechtecks verlaufen.
+    # Da es nur H/V Linien sind, prüfen wir auf Überschneidungen.
+    for i in range(len(poly_points)):
+        cp1 = poly_points[i]
+        cp2 = poly_points[(i + 1) % len(poly_points)]
 
+        pk_xmin, pk_xmax = sorted([cp1[0], cp2[0]])
+        pk_ymin, pk_ymax = sorted([cp1[1], cp2[1]])
 
+        # Horizontale Polygon-Kante
+        if cp1[1] == cp2[1]:
+            # Wenn die Kante auf einer Y-Höhe liegt, die im Rechteck liegt
+            if ymin < cp1[1] < ymax:
+                # Und die Kante sich mit dem X-Bereich des Rechtecks überschneidet
+                if not (pk_xmax <= xmin or pk_xmin >= xmax):
+                    return False
+
+        # Vertikale Polygon-Kante
+        else:
+            # Wenn die Kante auf einer X-Position liegt, die im Rechteck liegt
+            if xmin < cp1[0] < xmax:
+                # Und die Kante sich mit dem Y-Bereich des Rechtecks überschneidet
+                if not (pk_ymax <= ymin or pk_ymin >= ymax):
+                    return False
+
+    return True
+
+'''
+**********
+* Gemini *
+**********
+'''
 def part2():
+    test = True  # Auf False setzen für die große Datei
+    fileName = 'Resources/day9Training.txt' if test else 'Resources/day9.txt'
 
-    print('Part 2')
-    test = False
+    content = readTheFile(fileName)
+    if not content:
+        print("Keine Daten gefunden.")
+        return
 
-    if test:
-        content = readTheFile('Resources/day9Training.txt')
+    max_area = 0
+    best_pair = None
+
+    print(f"Berechne größte Fläche für {len(content)} Punkte...")
+
+    # Alle Paare von Punkten (rote Fliesen) prüfen
+    for i in range(len(content)):
+        for j in range(i + 1, len(content)):
+            p1 = content[i]
+            p2 = content[j]
+
+
+            # Rechteck-Bedingung: unterschiedliche X und Y
+            if p1[0] == p2[0] or p1[1] == p2[1]:
+                continue
+
+            # Vorab-Berechnung der Fläche (+1 für Inklusivität der Fliesen)
+            width = abs(p1[0] - p2[0]) + 1
+            height = abs(p1[1] - p2[1]) + 1
+            area = width * height
+
+            # Nur prüfen, wenn die Fläche überhaupt größer sein könnte
+            if area > max_area:
+                if is_rectangle_valid(p1, p2, content):
+                    max_area = area
+                    best_pair = (p1, p2)
+
+    if best_pair:
+        print("\n--- ERGEBNIS ---")
+        print(f"Datei: {fileName}")
+        print(f"Größte Fläche: {max_area}")
+        print(f"Eckpunkte: {best_pair[0]} und {best_pair[1]}")
     else:
-        content = readTheFile('Resources/day9.txt')
-
-    minYPos = min(content, key=lambda x: (x[1]))
-    maxYPos = max(content, key=lambda x: (x[1]))
-    minXPos = min(content, key=lambda x: (x[0]))
-    maxXPos = max(content, key=lambda x: (x[0]))
-
-    #content = sorted(content, key=lambda x: (x[1],  x[0]))
-
-    lookupTableByX = {}
-    lookupTableByY = {}
-
-    for pair in content:
-        #for x,y in pair:
-            #x, y = pair
-        if pair[0] not in lookupTableByX:
-            lookupTableByX[pair[0]] = []
-        lookupTableByX[pair[0]].append(pair)
-
-        if pair[1] not in lookupTableByY:
-            lookupTableByY[pair[1]] = []
-        lookupTableByY[pair[1]].append(pair)
-
-            #if pair not in lookupTableByY:
-            #    lookupTableByY[pair] =
-    
-    print(minYPos)
-    print(maxYPos)
-    print(minXPos)
-    print(maxXPos)
-
-    fx, fy = minYPos
-    sx, sy = maxYPos
-    x = abs(fx - sx) + 1
-    y = abs(fy - sy) + 1
-    print(f'{minYPos} {maxYPos} {x*y}')
-    fx, fy = minXPos
-    sx, sy = maxXPos
-    x = abs(fx - sx) + 1
-    y = abs(fy - sy) + 1
-    print(f'{minYPos} {maxYPos} {x * y}')
-
-    print(content)
-    
-    # 1. Daten in X- und Y-Koordinaten aufteilen
-    X = [point[0] for point in content]
-    Y = [point[1] for point in content]
-
-    # 2. Ein Matplotlib-Plot erstellen
-    plt.figure(figsize=(10, 8))  # Größe des Plots einstellen
-
-    ## --- 2A: Die Punkte als Linienzug darstellen ---
-    # Dies ist relevant, da der Input eine geschlossene Begrenzung/ein Polygon darstellt
-    plt.plot(X, Y,
-             linestyle='-',  # Linien zwischen den Punkten zeichnen
-             color='blue',  # Farbe der Linie
-             linewidth=1.5,  # Dicke der Linie
-             label='Polygonzug')
-
-    # Den letzten Punkt mit dem ersten Punkt verbinden (um das Polygon zu schließen)
-    # Hierfür hängen wir den ersten Punkt an das Ende der Listen an.
-    plt.plot([X[-1], X[0]], [Y[-1], Y[0]],
-             linestyle='-',
-             color='blue',
-             linewidth=1.5)
-
-    ## --- 2B: Die einzelnen Punkte als Scatter Plot darstellen ---
-    plt.scatter(X, Y,
-                color='red',  # Farbe der Punkte
-                marker='o',  # Form der Punkte (Kreis)
-                s=10,  # Größe der Punkte
-                label='Eckpunkte')
-
-    # 3. Das Plot-Layout anpassen
-    plt.title('Visualisierung des Polygonumrisses')
-    plt.xlabel('X-Koordinate')
-    # Da Y in deinem Datensatz sehr groß wird, kehren wir die Achse um,
-    # wenn die Punkte von einer "oben-nach-unten"-Darstellung stammen (häufig bei Bilddaten oder Koordinaten in bestimmten Kontexten).
-    # Wenn das Polygon die "normale" geografische Darstellung (unten=klein) abbilden soll, kannst du diese Zeile entfernen.
-    # plt.gca().invert_yaxis()
-
-    # 4. Seitenverhältnis festlegen
-    # Dies ist SEHR wichtig, damit der Umriss nicht verzerrt aussieht (1 Einheit X = 1 Einheit Y).
-    plt.axis('equal')
-
-    # 5. Legende und Gitter anzeigen
-    plt.legend()
-    plt.grid(True, linestyle='--', alpha=0.6)
-
-    # 6. Plot anzeigen
-    plt.show()
-
-    allDiffs = []
-    for firstElemPos in range(0, len(content)-2, 2): # only look rowwise
-        #x, y = firstElemPos
-        #print(content[firstElemPos])
-        retVal = findOppositeAndCountSizeOfArea(content[firstElemPos], lookupTableByX, lookupTableByY)
-        if retVal != -1:
-            allDiffs.append(retVal)
-
-    allDiffs = sorted(allDiffs, key=lambda x: x[2], reverse=True)
-    print(allDiffs)
-
+        print("Kein gültiges Rechteck gefunden.")
 
 if __name__ == '__main__':
-    #part1()
+    part1()
     part2()
 
 

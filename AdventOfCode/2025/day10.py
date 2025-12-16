@@ -1,7 +1,9 @@
-from functools import reduce
+#from functools import reduce
 from itertools import combinations
 from functools import reduce
 import operator
+import pulp
+import numpy as np
 
 def readTheFile(filename):
     content = []
@@ -74,5 +76,88 @@ def part1():
 
     print(allCombos)
 
+
+import pulp
+
+
+def readTheFile(filename):
+    content = []
+    with open(filename, 'r') as file:
+        lines = file.read().strip().split('\n')
+        for line in lines:
+            if not line: continue
+
+            # Zerlege die Zeile
+            firstPos = line.index(']')
+            lastPos = line.index('{')
+
+            # Button-Verkabelung extrahieren
+            # Wir suchen alle Inhalte in Klammern (x,y,z)
+            button_part = line[firstPos + 2:lastPos].strip()
+            # Wir splitten bei ") (" und säubern die Reste
+            button_groups = button_part.replace('(', '').replace(')', '').split(' ')
+            buttonWirings = [[int(n) for n in g.split(',')] for g in button_groups if g]
+
+            # Joltages extrahieren
+            joltagesStr = line[lastPos + 1:-1]
+            joltages = [int(val) for val in joltagesStr.split(',')]
+
+            content.append([buttonWirings, joltages])
+    return content
+
+
+def solve_machine(button_wirings, target_joltages):
+    num_buttons = len(button_wirings)
+    num_counters = len(target_joltages)
+
+    # Problem definieren: Wir wollen die Summe der Drücke MINIMIEREN
+    prob = pulp.LpProblem("Minimize_Button_Presses", pulp.LpMinimize)
+
+    # Variablen: x_i ist die Anzahl der Drücke für Knopf i
+    # Die Anzahl muss eine ganze Zahl (Integer) und >= 0 sein
+    presses = [pulp.LpVariable(f"btn_{i}", lowBound=0, cat='Integer') for i in range(num_buttons)]
+
+    # Zielfunktion: Summe aller presses
+    prob += pulp.lpSum(presses)
+
+    # Nebenbedingungen: Für jeden Zähler muss die Summe der Drücke dem Ziel entsprechen
+    for counter_idx in range(num_counters):
+        # Finde alle Knöpfe, die diesen spezifischen Zähler beeinflussen
+        contributing_buttons = []
+        for btn_idx, wiring in enumerate(button_wirings):
+            if counter_idx in wiring:
+                contributing_buttons.append(presses[btn_idx])
+
+        # Die Summe dieser Knöpfe muss exakt target_joltages[counter_idx] sein
+        prob += pulp.lpSum(contributing_buttons) == target_joltages[counter_idx]
+
+    # Lösen (ohne Konsolenausgabe)
+    prob.solve(pulp.PULP_CBC_CMD(msg=0))
+
+    # Rückgabe der Summe der Drücke
+    return int(pulp.value(prob.objective))
+
+
+def part2():
+    print('Part 2 - Joltage Configuration')
+
+    test = True
+    if test:
+        content = readTheFile('Resources/day10Training.txt')
+    else:
+        content = readTheFile('Resources/day10.txt')
+
+
+    total_min_presses = 0
+
+    for button_wirings, joltages in content:
+        result = solve_machine(button_wirings, joltages)
+        total_min_presses += result
+        print(f"Maschine benötigt {result} Drücke.")
+
+    print(f"--- GESAMT: {total_min_presses} ---")
+
+
 if __name__ == '__main__':
-    part1()
+    #part1()
+    part2()
