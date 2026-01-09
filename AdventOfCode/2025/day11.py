@@ -50,6 +50,7 @@ def countPaths(graph, start, end):
     memo[state] = total
     return total
 
+
 def part1():
     print('Part 1')
 
@@ -67,9 +68,10 @@ def part1():
         allPaths = []
 
         # Driver Code
-        dfs(graph, 'you', 'out', currentPath, allPaths)
-        print(allPaths)
-        print(len(allPaths))
+        #dfs(graph, 'you', 'out', currentPath, allPaths)
+        #print(allPaths)
+        #print(len(allPaths))
+        print(countPaths(graph, 'you', 'out'))
 
 
 def part2():
@@ -105,5 +107,5 @@ def part2():
 
 
 if __name__ == '__main__':
-    #part1()
+    part1()
     part2()
