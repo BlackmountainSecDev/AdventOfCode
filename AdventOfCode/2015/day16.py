@@ -1,6 +1,3 @@
-from collections import OrderedDict
-
-
 def readfile(filename):
     with open(filename, 'r') as datei:
         localContent = datei.read()
@@ -102,5 +99,5 @@ def part2():
     print(possibleAunt)
 
 if __name__ == '__main__':
-    #part1()
+    part1()
     part2()
